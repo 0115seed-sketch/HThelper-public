@@ -135,14 +135,13 @@ const App = () => {
   }, []);
 
   const competencyOptions = [
-    "성실함과 책임감",
     "자기주도적 학습 태도",
-    "따뜻한 리더십과 협업 능력",
-    "창의적 문제 해결력",
+    "위기관리 능력",
+    "나눔과 배려",
     "긍정적 태도와 공동체 기여",
-    "깊이 있는 탐구심",
-    "학업에 대한 열정과 끈기",
-    "타인에 대한 배려와 공감 능력",
+    "도전 정신",
+    "관찰력과 통찰력",
+    "친절과 배려",
   ];
   
   const evaluationOptions = [
@@ -226,6 +225,22 @@ const App = () => {
       setEvaluation(prev => [...prev, trimmedValue]);
     }
     setCustomEvaluation('');
+  };
+
+  const exampleCompetencies = [
+    "지적 탐구심", "비판적 사고력", "논리적 분석력", "융합적 사고", "메타인지 능력",
+    "학업 성실성", "포용적 리더십", "강한 책임감", "솔선수범", "중재 및 갈등 해결 능력",
+    "의사결정 능력", "나눔과 배려", "협업 능력", "경청과 공감 능력", "사회적 감수성",
+    "강한 의지와 끈기", "뛰어난 회복탄력성", "목표 설정 및 실천 능력", "창의적 사고",
+    "문제 해결 능력", "유연한 사고", "정직과 신뢰", "겸손한 태도", "감사하는 마음"
+  ];
+
+  const addExampleCompetencies = () => {
+    setUserCompetencies(prev => {
+      const existingCompetencies = new Set([...prev, ...competencyOptions]);
+      const newCompetencies = exampleCompetencies.filter(ex => !existingCompetencies.has(ex));
+      return [...prev, ...newCompetencies];
+    });
   };
 
   const handleReset = () => {
@@ -452,20 +467,23 @@ const App = () => {
         
         <main>
           <div className="form-section">
-            <h2>1단계: 학생의 핵심 역량 선택</h2>
+            <div className="form-section-header">
+              <h2>1단계: 학생의 핵심 역량 선택</h2>
+              <button className="add-examples-button" onClick={addExampleCompetencies}>다양한 예시 추가하기</button>
+            </div>
             <div className="chip-container">
               {competencyOptions.map((opt) => (
-                <button
+                <div
                   key={opt}
                   className={`chip ${coreCompetencies.includes(opt) ? "selected" : ""}`}
                   onClick={() => handleChipToggle(opt, coreCompetencies, setCoreCompetencies)}
                   aria-pressed={coreCompetencies.includes(opt)}
                 >
                   {opt}
-                </button>
+                </div>
               ))}
               {userCompetencies.map((opt) => (
-                  <button
+                  <div
                       key={opt}
                       className={`chip user-chip ${coreCompetencies.includes(opt) ? "selected" : ""}`}
                       onClick={() => handleChipToggle(opt, coreCompetencies, setCoreCompetencies)}
@@ -482,7 +500,7 @@ const App = () => {
                       >
                           &times;
                       </span>
-                  </button>
+                  </div>
               ))}
             </div>
             <div className="custom-input-container">

@@ -135,6 +135,36 @@ header h1 {
   border-bottom: 1px solid var(--border-color);
 }
 
+.form-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.form-section-header h2 {
+  margin-bottom: 0;
+  border-bottom: none;
+}
+
+.add-examples-button {
+  background-color: transparent;
+  color: var(--primary-color);
+  border: 1px solid var(--primary-color);
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.add-examples-button:hover {
+  background-color: var(--primary-color);
+  color: white;
+}
+
 .form-section .optional {
   font-size: 0.9rem;
   color: var(--muted-text-color);
