@@ -1,0 +1,451 @@
+:root {
+  --primary-color: #007bff;
+  --primary-hover-color: #0056b3;
+  --secondary-color: #28a745;
+  --secondary-hover-color: #218838;
+  --background-color: #f8f9fa;
+  --card-background-color: #ffffff;
+  --text-color: #343a40;
+  --muted-text-color: #6c757d;
+  --border-color: #dee2e6;
+  --error-color: #dc3545;
+  --font-family: "Noto Sans KR", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--background-color);
+  color: var(--text-color);
+  line-height: 1.6;
+  display: flex;
+  justify-content: center;
+  padding: 2rem 1rem;
+  min-height: 100%;
+}
+
+#root {
+  width: 100%;
+  max-width: 800px;
+}
+
+.container {
+  background-color: var(--card-background-color);
+  padding: 2.5rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: filter 0.3s ease-in-out;
+}
+
+.container.blurred {
+    filter: blur(5px);
+    pointer-events: none;
+    user-select: none;
+}
+
+
+header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.header-top {
+  margin-bottom: 0.5rem;
+}
+
+.header-description {
+  font-size: 1rem;
+  color: var(--muted-text-color);
+  margin-bottom: 1rem;
+}
+
+.header-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+}
+
+header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.change-key-button {
+  background-color: #f8f9fa;
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background-color 0.2s;
+  line-height: 1;
+}
+
+.change-key-button:hover {
+  background-color: #e9ecef;
+}
+
+.reset-button {
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background-color 0.2s;
+  line-height: 1;
+}
+
+.reset-button:hover {
+  background-color: #5a6268;
+}
+
+.reset-button.confirm {
+  background-color: var(--error-color);
+}
+
+.reset-button.confirm:hover {
+  background-color: #c82333; /* Darker red */
+}
+
+
+.form-section {
+  margin-bottom: 2rem;
+}
+
+.form-section h2 {
+  font-size: 1.25rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.form-section .optional {
+  font-size: 0.9rem;
+  color: var(--muted-text-color);
+  margin-left: 0.5rem;
+  font-weight: 400;
+}
+
+.chip-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.chip {
+  background-color: #e9ecef;
+  color: #495057;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  font-size: 0.9rem;
+  position: relative;
+}
+
+.chip:hover {
+  background-color: #dee2e6;
+}
+
+.chip.selected {
+  background-color: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.chip.user-chip:hover .delete-chip {
+    display: flex;
+}
+
+.delete-chip {
+    position: absolute;
+    top: 50%;
+    right: 4px;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    background-color: rgba(0, 0, 0, 0.3);
+    color: white;
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    line-height: 1;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.chip.selected .delete-chip {
+    background-color: rgba(255, 255, 255, 0.3);
+    color: var(--primary-color);
+}
+
+.delete-chip:hover {
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.chip.selected .delete-chip:hover {
+    background-color: rgba(255, 255, 255, 0.5);
+}
+
+.custom-input-container {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.custom-input-container input {
+  flex-grow: 1;
+  min-width: 0;
+}
+
+.add-button {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-color);
+  background-color: #f8f9fa;
+  color: #495057;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  flex-shrink: 0;
+  font-weight: 500;
+}
+
+.add-button:hover:not(:disabled) {
+  background-color: #e9ecef;
+}
+
+.add-button:disabled {
+  color: #adb5bd;
+  cursor: not-allowed;
+}
+
+input[type="text"],
+input[type="password"],
+textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  font-family: var(--font-family);
+  font-size: 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.generate-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding: 0.85rem 1rem;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: white;
+  background-color: var(--primary-color);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.generate-button:hover:not(:disabled) {
+  background-color: var(--primary-hover-color);
+}
+
+.generate-button:disabled {
+  background-color: #a0c7ff;
+  cursor: not-allowed;
+}
+
+.generate-button .spinner {
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 1s linear infinite;
+  margin-right: 10px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.result-section {
+  margin-top: 2.5rem;
+}
+
+.result-card {
+  background-color: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  white-space: pre-wrap;
+  line-height: 1.7;
+  position: relative;
+}
+
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.result-header h3 {
+  font-size: 1.25rem;
+}
+
+.copy-button {
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.2s;
+}
+
+.copy-button:hover {
+  background-color: #5a6268;
+}
+
+.error-message {
+  color: var(--error-color);
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.refine-section {
+  margin-top: 2.5rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.refine-section h3 {
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.refine-section textarea {
+  min-height: 80px;
+  margin-bottom: 1rem;
+}
+
+.refine-button {
+  background-color: var(--secondary-color);
+}
+
+.refine-button:hover:not(:disabled) {
+  background-color: var(--secondary-hover-color);
+}
+
+.refine-button:disabled {
+  background-color: #83d493;
+}
+
+/* API Key Modal Styles */
+.api-key-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.api-key-modal-content {
+    background-color: white;
+    padding: 2.5rem;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    width: 90%;
+    max-width: 500px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.api-key-modal-content h2 {
+    margin-bottom: 0.5rem;
+}
+
+.api-key-modal-content p {
+    color: var(--muted-text-color);
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.api-key-modal-content input {
+    text-align: center;
+}
+
+.api-key-modal-content button {
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 1rem;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.api-key-modal-content button:hover {
+    background-color: var(--primary-hover-color);
+}
+
+.api-key-link {
+    font-size: 0.85rem;
+    color: var(--primary-color);
+    text-decoration: none;
+    margin-top: 0.5rem;
+}
+
+.api-key-link:hover {
+    text-decoration: underline;
+}
+
+.error-message.modal-error {
+    margin-top: 0;
+}
