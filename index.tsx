@@ -1,6 +1,6 @@
-import React, { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { createRoot } from "react-dom/client";
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Part } from "@google/genai";
 
 const systemInstruction = `
         [1. 역할 정의]
@@ -21,28 +21,36 @@ const systemInstruction = `
         - 어조: 전문가적이고 긍정적이며, 학생의 잠재력과 성장이 드러나는 교육적인 문체를 사용한다.
       `;
 
+interface ChatMessage {
+  role: string;
+  parts: Part[];
+}
+
 const App = () => {
   const [apiKey, setApiKey] = useState("");
   const [apiKeyInput, setApiKeyInput] = useState("");
   const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
-  
-  const [coreCompetencies, setCoreCompetencies] = useState([]);
+  const [selectedModel, setSelectedModel] = useState('gemini-2.5-flash');
+  const [isRateLimitModalOpen, setIsRateLimitModalOpen] = useState(false);
+  const [apiUsageCount, setApiUsageCount] = useState({ flash: 0, pro: 0 });
+
+  const [coreCompetencies, setCoreCompetencies] = useState<string[]>([]);
   const [customCompetency, setCustomCompetency] = useState("");
   const [anecdote, setAnecdote] = useState("");
-  const [evaluation, setEvaluation] = useState([]);
+  const [evaluation, setEvaluation] = useState<string[]>([]);
   const [customEvaluation, setCustomEvaluation] = useState("");
   
-  const [userCompetencies, setUserCompetencies] = useState([]);
-  const [userEvaluations, setUserEvaluations] = useState([]);
+  const [userCompetencies, setUserCompetencies] = useState<string[]>([]);
+  const [userEvaluations, setUserEvaluations] = useState<string[]>([]);
 
   const [isLoading, setIsLoading] = useState(false);
   const [isRevising, setIsRevising] = useState(false);
   const [generatedText, setGeneratedText] = useState("");
   const [error, setError] = useState("");
-  const [chatHistory, setChatHistory] = useState([]);
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [followUpInput, setFollowUpInput] = useState("");
   const [isConfirmingReset, setIsConfirmingReset] = useState(false);
-  const resetTimeoutRef = useRef(null);
+  const resetTimeoutRef = useRef<number | null>(null);
 
   // Check for API key and load user data on initial render
   useEffect(() => {
@@ -58,9 +66,45 @@ const App = () => {
       if (storedCompetencies) setUserCompetencies(JSON.parse(storedCompetencies));
       const storedEvaluations = localStorage.getItem('user_evaluations');
       if (storedEvaluations) setUserEvaluations(JSON.parse(storedEvaluations));
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to load from local storage", err);
       setError("데이터를 불러오는 중 오류가 발생했습니다.");
+    }
+  }, []);
+
+  // Load and check API usage count on initial render
+  useEffect(() => {
+    try {
+      const storedUsage = localStorage.getItem('api_usage');
+      const lastResetStr = localStorage.getItem('api_usage_last_reset');
+      
+      const now = new Date();
+      // KST is UTC+9. 4 PM KST is 7 AM UTC.
+      const resetHourUTC = 7; 
+
+      let lastResetTime = lastResetStr ? new Date(lastResetStr) : new Date(0);
+
+      // Determine the most recent reset time (4 PM KST / 7 AM UTC)
+      const lastResetPoint = new Date(now);
+      lastResetPoint.setUTCHours(resetHourUTC, 0, 0, 0);
+      
+      // If current time is before today's reset time, the last reset point was yesterday
+      if (now.getUTCHours() < resetHourUTC) {
+          lastResetPoint.setUTCDate(lastResetPoint.getUTCDate() - 1);
+      }
+
+      if (!storedUsage || !lastResetStr || lastResetTime < lastResetPoint) {
+        // Time to reset
+        const newUsage = { flash: 0, pro: 0 };
+        setApiUsageCount(newUsage);
+        localStorage.setItem('api_usage', JSON.stringify(newUsage));
+        localStorage.setItem('api_usage_last_reset', now.toISOString());
+      } else {
+        // Load existing usage
+        setApiUsageCount(JSON.parse(storedUsage));
+      }
+    } catch (err) {
+      console.error("Failed to handle API usage data", err);
     }
   }, []);
 
@@ -68,7 +112,7 @@ const App = () => {
   useEffect(() => {
     try {
       localStorage.setItem('user_competencies', JSON.stringify(userCompetencies));
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to save competencies to local storage", err);
     }
   }, [userCompetencies]);
@@ -76,7 +120,7 @@ const App = () => {
   useEffect(() => {
     try {
       localStorage.setItem('user_evaluations', JSON.stringify(userEvaluations));
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to save evaluations to local storage", err);
     }
   }, [userEvaluations]);
@@ -119,7 +163,7 @@ const App = () => {
         setApiKey(trimmedKey);
         setIsApiKeyModalOpen(false);
         setError("");
-      } catch (err) {
+      } catch (err: any) {
          console.error("Failed to save API key", err);
          setError("API 키를 저장하지 못했습니다. 브라우저 설정을 확인해주세요.");
       }
@@ -131,7 +175,7 @@ const App = () => {
   const handleChangeApiKey = () => {
       try {
         localStorage.removeItem('gemini_api_key');
-      } catch (err) {
+      } catch (err: any) {
          console.error("Failed to remove API key", err);
       }
       setApiKey("");
@@ -139,7 +183,7 @@ const App = () => {
       setIsApiKeyModalOpen(true);
   };
   
-  const callGeminiApi = async (prompt, history) => {
+  const callGeminiApi = async (prompt: string, history: ChatMessage[]) => {
     if (!apiKey) {
       throw new Error("API 키가 설정되지 않았습니다.");
     }
@@ -148,7 +192,7 @@ const App = () => {
     const contents = [...(history || []), { role: "user", parts: [{ text: prompt }] }];
 
     const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: selectedModel,
         contents: contents,
         config: {
             systemInstruction: systemInstruction,
@@ -158,7 +202,7 @@ const App = () => {
     return response.text;
   };
 
-  const handleChipToggle = (item, list, setter) => {
+  const handleChipToggle = (item: string, list: string[], setter: React.Dispatch<React.SetStateAction<string[]>>) => {
     setter(
       list.includes(item)
         ? list.filter((i) => i !== item)
@@ -194,7 +238,7 @@ const App = () => {
       try {
         localStorage.removeItem('user_competencies');
         localStorage.removeItem('user_evaluations');
-      } catch (err) {
+      } catch (err: any) {
         console.error("Failed to clear local storage", err);
       }
       
@@ -249,19 +293,26 @@ const App = () => {
       
       const text = await callGeminiApi(userPrompt, []);
       
-      setGeneratedText(text);
+      setGeneratedText(text || '');
       setChatHistory([
         { role: 'user', parts: [{ text: userPrompt }] },
-        { role: 'model', parts: [{ text: text }] }
+        { role: 'model', parts: [{ text: text || '' }] }
       ]);
 
-    } catch (e) {
+      // Increment usage count
+      const newUsage = { ...apiUsageCount };
+      if (selectedModel === 'gemini-2.5-flash') newUsage.flash += 1;
+      else if (selectedModel === 'gemini-2.5-pro') newUsage.pro += 1;
+      setApiUsageCount(newUsage);
+      localStorage.setItem('api_usage', JSON.stringify(newUsage));
+
+    } catch (e: any) {
       console.error(e);
       setError(e.message || "생성 중 오류가 발생했습니다. API 키가 유효한지 확인해주세요.");
     } finally {
       setIsLoading(false);
     }
-  }, [coreCompetencies, anecdote, evaluation, apiKey]);
+  }, [coreCompetencies, anecdote, evaluation, apiKey, selectedModel]);
 
   const handleRevision = useCallback(async () => {
     if (!followUpInput.trim() || isRevising) return;
@@ -271,20 +322,28 @@ const App = () => {
 
     try {
       const text = await callGeminiApi(followUpInput, chatHistory);
-      setGeneratedText(text);
+      setGeneratedText(text || '');
       setChatHistory(prev => [
           ...prev,
           { role: 'user', parts: [{ text: followUpInput }] },
-          { role: 'model', parts: [{ text: text }] }
+          { role: 'model', parts: [{ text: text || '' }] }
       ]);
       setFollowUpInput("");
-    } catch(e) {
+
+      // Increment usage count
+      const newUsage = { ...apiUsageCount };
+      if (selectedModel === 'gemini-2.5-flash') newUsage.flash += 1;
+      else if (selectedModel === 'gemini-2.5-pro') newUsage.pro += 1;
+      setApiUsageCount(newUsage);
+      localStorage.setItem('api_usage', JSON.stringify(newUsage));
+      
+    } catch (e: any) {
       console.error(e);
       setError(e.message || "수정 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
     } finally {
       setIsRevising(false);
     }
-  }, [chatHistory, followUpInput, isRevising, apiKey]);
+  }, [chatHistory, followUpInput, isRevising, apiKey, selectedModel]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(generatedText).then(() => {
@@ -292,12 +351,12 @@ const App = () => {
     });
   };
 
-  const handleDeleteUserCompetency = (competencyToDelete) => {
+  const handleDeleteUserCompetency = (competencyToDelete: string) => {
     setUserCompetencies(prev => prev.filter(c => c !== competencyToDelete));
     setCoreCompetencies(prev => prev.filter(c => c !== competencyToDelete));
   };
 
-  const handleDeleteUserEvaluation = (evaluationToDelete) => {
+  const handleDeleteUserEvaluation = (evaluationToDelete: string) => {
     setUserEvaluations(prev => prev.filter(e => e !== evaluationToDelete));
     setEvaluation(prev => prev.filter(e => e !== evaluationToDelete));
   };
@@ -306,6 +365,39 @@ const App = () => {
 
   return (
     <>
+      {isRateLimitModalOpen && (
+        <div className="api-key-modal-overlay" onClick={() => setIsRateLimitModalOpen(false)}>
+            <div className="api-key-modal-content" onClick={(e) => e.stopPropagation()}>
+                <h2>모델별 사용 한계 안내</h2>
+                <p>모델별 사용 한도는 다음과 같으며, 사용량에 따라 제한될 수 있습니다.</p>
+                <table className="rate-limit-table">
+                    <thead>
+                        <tr>
+                            <th>모델</th>
+                            <th>분당 요청 수 (RPM)</th>
+                            <th>일일 요청 수 (RPD)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Gemini 2.5 Pro</td>
+                            <td>5</td>
+                            <td>100</td>
+                        </tr>
+                        <tr>
+                            <td>Gemini 2.5 Flash</td>
+                            <td>10</td>
+                            <td>250</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <a href="https://ai.google.dev/gemini-api/docs/rate-limits?hl=ko" target="_blank" rel="noopener noreferrer" className="api-key-link">
+                    자세한 내용 확인하기
+                </a>
+                <button onClick={() => setIsRateLimitModalOpen(false)}>닫기</button>
+            </div>
+        </div>
+      )}
       {isApiKeyModalOpen && (
         <div className="api-key-modal-overlay">
             <div className="api-key-modal-content">
@@ -326,14 +418,29 @@ const App = () => {
             </div>
         </div>
       )}
-      <div className={`container ${isApiKeyModalOpen ? 'blurred' : ''}`}>
+      <div className={`container ${isApiKeyModalOpen || isRateLimitModalOpen ? 'blurred' : ''}`}>
         <header>
           <div className="header-top">
               <h1>AI 행특 도우미</h1>
           </div>
           <p className="header-description">AI와 함께 학생의 잠재력을 담아내는 행동특성 및 종합의견 완성</p>
           <div className="header-controls">
+               <div className="model-selector">
+                  <button 
+                      className={`model-button ${selectedModel === 'gemini-2.5-flash' ? 'active' : ''}`}
+                      onClick={() => setSelectedModel('gemini-2.5-flash')}
+                  >
+                      Flash ({apiUsageCount.flash})
+                  </button>
+                  <button 
+                      className={`model-button ${selectedModel === 'gemini-2.5-pro' ? 'active' : ''}`}
+                      onClick={() => setSelectedModel('gemini-2.5-pro')}
+                  >
+                      Pro ({apiUsageCount.pro})
+                  </button>
+              </div>
               <button className="change-key-button" onClick={handleChangeApiKey}>API 키 변경</button>
+              <button className="info-button" onClick={() => setIsRateLimitModalOpen(true)}>모델 사용 한계</button>
               <button
                   className={`reset-button ${isConfirmingReset ? 'confirm' : ''}`}
                   onClick={handleReset}
@@ -511,5 +618,7 @@ const App = () => {
 };
 
 const container = document.getElementById("root");
-const root = createRoot(container);
-root.render(<App />);
+if (container) {
+  const root = createRoot(container);
+  root.render(<App />);
+}

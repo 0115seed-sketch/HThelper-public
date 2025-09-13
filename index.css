@@ -73,6 +73,7 @@ header {
   justify-content: center;
   align-items: center;
   gap: 1rem;
+  flex-wrap: wrap;
 }
 
 header h1 {
@@ -448,4 +449,67 @@ textarea {
 
 .error-message.modal-error {
     margin-top: 0;
+}
+
+.rate-limit-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+}
+
+.rate-limit-table th,
+.rate-limit-table td {
+    border: 1px solid var(--border-color);
+    padding: 0.5rem;
+    text-align: center;
+}
+
+.rate-limit-table th {
+    background-color: #f8f9fa;
+}
+
+.model-selector {
+    display: flex;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.model-button {
+    background-color: #f8f9fa;
+    color: var(--text-color);
+    border: none;
+    padding: 0.4rem 0.8rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    font-size: 0.85rem;
+}
+
+.model-button:not(:last-child) {
+    border-right: 1px solid var(--border-color);
+}
+
+.model-button.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.model-button:hover:not(.active) {
+    background-color: #e9ecef;
+}
+
+.info-button {
+  background-color: #f8f9fa;
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background-color 0.2s;
+  line-height: 1;
+}
+
+.info-button:hover {
+  background-color: #e9ecef;
 }
